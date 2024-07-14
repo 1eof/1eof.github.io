@@ -17,7 +17,7 @@
     
     
     <entry>
-      <title>SwayWM、i3wm在无显示管理器的情况下实现开机自动登录</title>
+      <title>Sway在无显示管理器的情况下实现开机自动登录</title>
       <link href="/posts/sway-autologin/"/>
       <url>/posts/sway-autologin/</url>
       
@@ -96,29 +96,6 @@
     
     
     <entry>
-      <title>云服务器安装Caddy并配置通配符证书</title>
-      <link href="/posts/config-caddy/"/>
-      <url>/posts/config-caddy/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><h2 id="放弃NginxProxyManager的原因">放弃NginxProxyManager的原因</h2><p>最近又从NginxProxyManager迁移到了Caddy，原因有以下几点:</p><ol><li>配置要求高，NPM的官方Docker镜像有足足1G多，对于一些存储空间小的服务器来说不是很友善，并且由有些内存小的服务器甚至可能无法运行Docker</li><li>BUG太多，例如&quot;自定义位置无法正常使用&quot;“强制SSL开启后证书无法续期”…并且官方的修复也不是很快</li><li>WebUI使用的Gravatar头像在大陆无法正常访问</li><li>NPM终究还是一个反向代理工具，不是Web服务器，配置静态网站还得手动更改高级配置，并且不支持PHP。<br>综上所述，我再次从NPM迁移到了Caddy。</li></ol><h2 id="简介">简介</h2><blockquote><p>Caddy是一款基于Go语言编写的强大且可扩展的平台，可以给你的站点、服务和应用程序提供服务。如果你是Caddy的新手，那么你提供Web服务的方式即将改变。</p></blockquote><h2 id="为什么选择Caddy">为什么选择Caddy</h2><p>Caddy的配置相对Nginx,Apache来说简单很多，同时Caddy的功能也十分丰富，并且拓展性强。</p><h1>相关链接</h1><p>中文文档: <a href="https://caddy2.dengxiaolong.com/docs/">https://caddy2.dengxiaolong.com/docs/</a><br>官方文档：<a href="https://caddyserver.com/docs/">https://caddyserver.com/docs/</a><br>自定义模块下载地址: <a href="https://caddyserver.com/download">https://caddyserver.com/download</a></p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: <s>Ubuntu Server 22.04</s> Debian 12</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://yourdomain.com/posts/ServerCommand/">参考之前的文章</a>）</li><li>一枚域名，并解析到服务器</li></ul><h1>安装</h1><h2 id="添加apt源并安装caddy">添加apt源并安装caddy</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token parameter variable">-y</span> debian-keyring debian-archive-keyring apt-transport-https<span class="token function">curl</span> <span class="token parameter variable">-1sLf</span> <span class="token string">'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'</span> <span class="token operator">|</span> <span class="token function">sudo</span> gpg <span class="token parameter variable">--dearmor</span> <span class="token parameter variable">-o</span> /usr/share/keyrings/caddy-stable-archive-keyring.gpg<span class="token function">curl</span> <span class="token parameter variable">-1sLf</span> <span class="token string">'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'</span> <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">tee</span> /etc/apt/sources.list.d/caddy-stable.list<span class="token function">sudo</span> <span class="token function">apt</span> update<span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> caddy<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre><h2 id="设置开机自启动">设置开机自启动</h2><p>APT版本的Caddy自带服务项，我们只需要启用即可。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> systemctl <span class="token builtin class-name">enable</span> caddy<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h2 id="添加模块">添加模块</h2><p>我这里使用DNSPOD的DNS模块，用于申请通配符SSL证书，不然一个一个申请很快就会达到Let’s Encrypt的数量限制。<br>新版本的Caddy添加模块十分简单，只需使用<code>caddy add-package</code>指令即可</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> caddy add-package github.com/caddy-dns/dnspod <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后在Caddyfile里编辑配置即可</p><h1>使用</h1><h2 id="Caddyfile">Caddyfile</h2><p>编辑Caddyfile文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> /etc/caddy<span class="token function">sudo</span> <span class="token function">nano</span> Caddyfile<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>在这个文件内添加自己的配置就行，可以参考<a href="https://caddyserver.com/docs/">官方文档</a>。<br>然后将配置文档适配为原生JSON并格式化</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> caddy adapt<span class="token function">sudo</span> caddy <span class="token function">fmt</span> <span class="token parameter variable">--overwrite</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="启动，停止，重载Caddy服务">启动，停止，重载Caddy服务</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> systemctl start caddy<span class="token function">sudo</span> systemctl stop caddy<span class="token function">sudo</span> systemctl reload caddy<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="配置通配符证书并使用">配置通配符证书并使用</h2><h3 id="申请API密钥">申请API密钥</h3><p>在DNSPOD官网点击右上角头像–API密钥–DNSPOD Token，点击&quot;创建密钥&quot;，名称随意，注意复制ID和Token，一会要用，然后点击&quot;完成&quot;。</p><h3 id="编辑Caddyfile">编辑Caddyfile</h3><p>如果你和我一样想使用泛域名证书的话可以参考我的配置。</p><pre class="line-numbers language-caddy" data-language="caddy"><code class="language-caddy">yourdomain.com *.yourdomain.com &#123;# SSL  tls &#123;dns dnspod id,token  &#125;# FileServer  @www host yourdomain.com www.yourdomain.com  handle @www &#123;    encode gzip    root * &#x2F;path&#x2F;to&#x2F;www    file_server  &#125;# ReverseProxy  @proxy host test.yourdomain.com  handle @proxy &#123;reverse_proxy IP:Port  &#125;# 404  handle &#123;respond 404  &#125;&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>注：这里的handle表示匹配器，@后面的内容随意，host后面是你的访问域名<br>这里的<code>yourdomain.com</code> <code>id,token</code>以及具体的反代和静态文件配置都需要改成你自己的<br>例如我访问<code>test.yourdomain.com</code>Caddy就会自动为我提供反向代理<br>而访问<code>yourdomain.com</code>就会访问指定的静态网站</p><h1>结语</h1><p>Caddy的社区环境还是不错的，有问题基本都可以在官方论坛以及Github Issues里找到解决方案。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Caddy </tag>
-            
-            <tag> SSL </tag>
-            
-            <tag> 反向代理 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Docker安装B站自动签到、抽奖工具</title>
       <link href="/posts/bili-tools/"/>
       <url>/posts/bili-tools/</url>
@@ -142,6 +119,52 @@
     
     
     <entry>
+      <title>云服务器安装Caddy并配置通配符证书</title>
+      <link href="/posts/config-caddy/"/>
+      <url>/posts/config-caddy/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><h2 id="放弃NginxProxyManager的原因">放弃NginxProxyManager的原因</h2><p>最近又从NginxProxyManager迁移到了Caddy，原因有以下几点:</p><ol><li>配置要求高，NPM的官方Docker镜像有足足1G多，对于一些存储空间小的服务器来说不是很友善，并且由有些内存小的服务器甚至可能无法运行Docker</li><li>BUG太多，例如&quot;自定义位置无法正常使用&quot;“强制SSL开启后证书无法续期”…并且官方的修复也不是很快</li><li>WebUI使用的Gravatar头像在大陆无法正常访问</li><li>NPM终究还是一个反向代理工具，不是Web服务器，配置静态网站还得手动更改高级配置，并且不支持PHP。<br>综上所述，我再次从NPM迁移到了Caddy。</li></ol><h2 id="简介">简介</h2><blockquote><p>Caddy是一款基于Go语言编写的强大且可扩展的平台，可以给你的站点、服务和应用程序提供服务。如果你是Caddy的新手，那么你提供Web服务的方式即将改变。</p></blockquote><h2 id="为什么选择Caddy">为什么选择Caddy</h2><p>Caddy的配置相对Nginx,Apache来说简单很多，同时Caddy的功能也十分丰富，并且拓展性强。</p><h1>相关链接</h1><p>中文文档: <a href="https://caddy2.dengxiaolong.com/docs/">https://caddy2.dengxiaolong.com/docs/</a><br>官方文档：<a href="https://caddyserver.com/docs/">https://caddyserver.com/docs/</a><br>自定义模块下载地址: <a href="https://caddyserver.com/download">https://caddyserver.com/download</a></p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: <s>Ubuntu Server 22.04</s> Debian 12</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://yourdomain.com/posts/ServerCommand/">参考之前的文章</a>）</li><li>一枚域名，并解析到服务器</li></ul><h1>安装</h1><h2 id="添加apt源并安装caddy">添加apt源并安装caddy</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token parameter variable">-y</span> debian-keyring debian-archive-keyring apt-transport-https<span class="token function">curl</span> <span class="token parameter variable">-1sLf</span> <span class="token string">'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'</span> <span class="token operator">|</span> <span class="token function">sudo</span> gpg <span class="token parameter variable">--dearmor</span> <span class="token parameter variable">-o</span> /usr/share/keyrings/caddy-stable-archive-keyring.gpg<span class="token function">curl</span> <span class="token parameter variable">-1sLf</span> <span class="token string">'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'</span> <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">tee</span> /etc/apt/sources.list.d/caddy-stable.list<span class="token function">sudo</span> <span class="token function">apt</span> update<span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> caddy<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre><h2 id="设置开机自启动">设置开机自启动</h2><p>APT版本的Caddy自带服务项，我们只需要启用即可。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> systemctl <span class="token builtin class-name">enable</span> caddy<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h2 id="添加模块">添加模块</h2><p>我这里使用DNSPOD的DNS模块，用于申请通配符SSL证书，不然一个一个申请很快就会达到Let’s Encrypt的数量限制。<br>新版本的Caddy添加模块十分简单，只需使用<code>caddy add-package</code>指令即可</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> caddy add-package github.com/caddy-dns/dnspod <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后在Caddyfile里编辑配置即可</p><h1>使用</h1><h2 id="Caddyfile">Caddyfile</h2><p>编辑Caddyfile文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> /etc/caddy<span class="token function">sudo</span> <span class="token function">nano</span> Caddyfile<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>在这个文件内添加自己的配置就行，可以参考<a href="https://caddyserver.com/docs/">官方文档</a>。<br>然后将配置文档适配为原生JSON并格式化</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> caddy adapt<span class="token function">sudo</span> caddy <span class="token function">fmt</span> <span class="token parameter variable">--overwrite</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="启动，停止，重载Caddy服务">启动，停止，重载Caddy服务</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> systemctl start caddy<span class="token function">sudo</span> systemctl stop caddy<span class="token function">sudo</span> systemctl reload caddy<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="配置通配符证书并使用">配置通配符证书并使用</h2><h3 id="申请API密钥">申请API密钥</h3><p>在DNSPOD官网点击右上角头像–API密钥–DNSPOD Token，点击&quot;创建密钥&quot;，名称随意，注意复制ID和Token，一会要用，然后点击&quot;完成&quot;。</p><h3 id="编辑Caddyfile">编辑Caddyfile</h3><p>如果你和我一样想使用泛域名证书的话可以参考我的配置。</p><pre class="line-numbers language-caddy" data-language="caddy"><code class="language-caddy">yourdomain.com *.yourdomain.com &#123;# SSL  tls &#123;dns dnspod id,token  &#125;# FileServer  @www host yourdomain.com www.yourdomain.com  handle @www &#123;    encode gzip    root * &#x2F;path&#x2F;to&#x2F;www    file_server  &#125;# ReverseProxy  @proxy host test.yourdomain.com  handle @proxy &#123;reverse_proxy IP:Port  &#125;# 404  handle &#123;respond 404  &#125;&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>注：这里的handle表示匹配器，@后面的内容随意，host后面是你的访问域名<br>这里的<code>yourdomain.com</code> <code>id,token</code>以及具体的反代和静态文件配置都需要改成你自己的<br>例如我访问<code>test.yourdomain.com</code>Caddy就会自动为我提供反向代理<br>而访问<code>yourdomain.com</code>就会访问指定的静态网站</p><h1>结语</h1><p>Caddy的社区环境还是不错的，有问题基本都可以在官方论坛以及Github Issues里找到解决方案。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Caddy </tag>
+            
+            <tag> SSL </tag>
+            
+            <tag> 反向代理 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>通过Docker搭建Minecraft Java版服务器</title>
+      <link href="/posts/docker-mcserver/"/>
+      <url>/posts/docker-mcserver/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><p>最近刚好趁圣诞和新年优惠购买了一台Racknerd的DC02机房的VPS，单单用来建站恐怕是有些浪费，于是我便想着用这台机器搭建MC服务器。</p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: Ubuntu Server 22.04</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="创建安装目录">创建安装目录</h2><p>创建一个目录用于存放数据与<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/minecraft<span class="token builtin class-name">cd</span> ~/minecraft<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="编辑-docker-compose-yml-文件">编辑 docker-compose.yml 文件</h2><p>用你喜欢的编辑器创建<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">"3.8"</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">mc</span><span class="token punctuation">:</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> minecraft    <span class="token key atrule">image</span><span class="token punctuation">:</span> itzg/minecraft<span class="token punctuation">-</span>server<span class="token punctuation">:</span>java17<span class="token punctuation">-</span>alpine <span class="token comment">#根据服务器核心版本选择java版本</span>    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">stdin_open</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">"25565:25565"</span>    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">EULA</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>      <span class="token key atrule">ONLINE_MODE</span><span class="token punctuation">:</span> <span class="token string">"FALSE"</span> <span class="token comment">#关闭正版验证</span>      <span class="token key atrule">VERSION</span><span class="token punctuation">:</span> <span class="token string">"1.20.4"</span> <span class="token comment">#指定版本</span>      <span class="token key atrule">TYPE</span><span class="token punctuation">:</span> <span class="token string">"PURPUR"</span>      <span class="token key atrule">INIT_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"1G"</span>      <span class="token key atrule">MAX_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"2G"</span>      <span class="token key atrule">SERVER_NAME</span><span class="token punctuation">:</span> <span class="token string">"Ly7F"</span> <span class="token comment">#可自定义名称</span>      <span class="token key atrule">MOTD</span><span class="token punctuation">:</span> <span class="token string">"LyingFFFFFFF"</span> <span class="token comment">#可自定义MOTD</span>      <span class="token key atrule">VIEW_DISTANCE</span><span class="token punctuation">:</span> <span class="token string">"4"</span>      <span class="token key atrule">OVERRIDE_SERVER_PROPERTIES</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data <span class="token comment">#数据存放路径,可自行更改</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>使用方法</h1><p>启动游戏后选择多人游戏–添加服务器–输入服务器IP:25565，名称随意，即可连接服务器。<br>之后如果想要使用指令,可以在云服务器终端中输入</p><pre class="line-numbers language-none"><code class="language-none">docker exec -i minecraft rcon-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>输入完成后按<code>Ctrl+C</code>退出容器。</p><h1>结语</h1><p>Docker搭建相比于手动配环境还是方便很多的，省去了很多步骤，并且迁移也方便。<br>希望大家都能轻松地搭建自己的服务器。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Docker </tag>
+            
+            <tag> Minecraft </tag>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>NginxProxyManager的安装和使用</title>
       <link href="/posts/config-nginxproxymanager/"/>
       <url>/posts/config-nginxproxymanager/</url>
@@ -152,11 +175,11 @@
       
         <tags>
             
+            <tag> Docker </tag>
+            
             <tag> SSL </tag>
             
             <tag> 反向代理 </tag>
-            
-            <tag> Docker </tag>
             
             <tag> NginxProxyManager </tag>
             
@@ -182,29 +205,6 @@
             <tag> Java </tag>
             
             <tag> Fabric </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>通过Docker搭建Minecraft Java版服务器</title>
-      <link href="/posts/docker-mcserver/"/>
-      <url>/posts/docker-mcserver/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><p>最近刚好趁圣诞和新年优惠购买了一台Racknerd的DC02机房的VPS，单单用来建站恐怕是有些浪费，于是我便想着用这台机器搭建MC服务器。</p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: Ubuntu Server 22.04</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="创建安装目录">创建安装目录</h2><p>创建一个目录用于存放数据与<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/minecraft<span class="token builtin class-name">cd</span> ~/minecraft<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="编辑-docker-compose-yml-文件">编辑 docker-compose.yml 文件</h2><p>用你喜欢的编辑器创建<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">"3.8"</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">mc</span><span class="token punctuation">:</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> minecraft    <span class="token key atrule">image</span><span class="token punctuation">:</span> itzg/minecraft<span class="token punctuation">-</span>server<span class="token punctuation">:</span>java17<span class="token punctuation">-</span>alpine <span class="token comment">#根据服务器核心版本选择java版本</span>    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">stdin_open</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">"25565:25565"</span>    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">EULA</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>      <span class="token key atrule">ONLINE_MODE</span><span class="token punctuation">:</span> <span class="token string">"FALSE"</span> <span class="token comment">#关闭正版验证</span>      <span class="token key atrule">VERSION</span><span class="token punctuation">:</span> <span class="token string">"1.20.4"</span> <span class="token comment">#指定版本</span>      <span class="token key atrule">TYPE</span><span class="token punctuation">:</span> <span class="token string">"PURPUR"</span>      <span class="token key atrule">INIT_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"1G"</span>      <span class="token key atrule">MAX_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"2G"</span>      <span class="token key atrule">SERVER_NAME</span><span class="token punctuation">:</span> <span class="token string">"Ly7F"</span> <span class="token comment">#可自定义名称</span>      <span class="token key atrule">MOTD</span><span class="token punctuation">:</span> <span class="token string">"LyingFFFFFFF"</span> <span class="token comment">#可自定义MOTD</span>      <span class="token key atrule">VIEW_DISTANCE</span><span class="token punctuation">:</span> <span class="token string">"4"</span>      <span class="token key atrule">OVERRIDE_SERVER_PROPERTIES</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data <span class="token comment">#数据存放路径,可自行更改</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>使用方法</h1><p>启动游戏后选择多人游戏–添加服务器–输入服务器IP:25565，名称随意，即可连接服务器。<br>之后如果想要使用指令,可以在云服务器终端中输入</p><pre class="line-numbers language-none"><code class="language-none">docker exec -i minecraft rcon-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>输入完成后按<code>Ctrl+C</code>退出容器。</p><h1>结语</h1><p>Docker搭建相比于手动配环境还是方便很多的，省去了很多步骤，并且迁移也方便。<br>希望大家都能轻松地搭建自己的服务器。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Docker </tag>
-            
-            <tag> Minecraft </tag>
-            
-            <tag> Java </tag>
             
         </tags>
       
@@ -250,9 +250,9 @@
       
         <tags>
             
-            <tag> SSL </tag>
-            
             <tag> Docker </tag>
+            
+            <tag> SSL </tag>
             
             <tag> Debian </tag>
             
