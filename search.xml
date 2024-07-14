@@ -142,6 +142,29 @@
     
     
     <entry>
+      <title>如何使用整合包搭建Minecraft模组服务器</title>
+      <link href="/posts/fabric-mcserver/"/>
+      <url>/posts/fabric-mcserver/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><p>最近我租赁了一台雨云的5900X的2H4G游戏云VPS，新用户首月仅需30元，相同配置下这个价格算得上相当便宜了，而且不用担心噪音，电费等问题，用来开一个Minecraft模组服务器岂不美哉。</p><h1>恰饭</h1><p>如果你也想趁假期体验一下雨云的服务器，可以用此链接注册，谢谢喵！</p><blockquote><p>注册链接: <a href="https://www.rainyun.com/MjAzOTgz_">https://www.rainyun.com/MjAzOTgz_</a><br>邀请码: MjAzOTgz</p></blockquote><h1>准备工作</h1><ul><li>服务器: <s>Racknerd 3C 2.5G 50G DC02机房</s> 雨云 Ryzen 5900X 2H4G 游戏云套餐</li><li>系统: <s>Ubuntu Server 22.04</s> Ubuntu Server 20.04 (官方没有提供最新的镜像)</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="选择并下载整合包服务端文件">选择并下载整合包服务端文件</h2><p>这次搭建我选用的是<code>BetterMC Fabric 1.20.1 V24</code>的Server版本。<br>这边放出<a href="https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/files/5023230">CurseForge链接</a>。<br>PS: 如果在国内服务器上搭建推荐先下载好服务端压缩包再用<code>Winscp</code>之类的SFTP软件上传到服务器。<br>当然，你也可以使用直接下载到服务器。<br>创建一个文件夹用于存放服务器文件，我这里叫<code>BetterMC</code>。<br>然后我们进入这个目录，并使用<code>wget</code>命令下载服务端压缩包。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> <span class="token parameter variable">-p</span> ~/BetterMC/<span class="token builtin class-name">cd</span> ~/BetterMC/<span class="token function">wget</span> <span class="token parameter variable">-O</span> BMC2.zip <span class="token string">'https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/download/5023230'</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="解压服务端文件并启动">解压服务端文件并启动</h2><p>首先安装unzip解压缩软件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">unzip</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>接着解压刚才的压缩包文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">unzip</span> BMC2.zip<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>解压完后删除刚才的压缩包文件，并赋予启动脚本可执行权限。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">rm</span> BMC2.zip<span class="token function">chmod</span> +x start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>OK,离成功已经不远了，使用<code>start.sh</code>脚本启动服务器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>PS: 有的整合包服务端文件没有提供服务器核心文件，需要自行下载并编写启动脚本，具体可参考不同整合包的CurseForge页面，或者服务端文件夹中的<code>README</code>文件，一般都会写明使用方法。<br>初次使用需要输入 <code>I agree eula</code> 来同意mojang的服务器协议。<br>随后耐心等待几分钟即可成功启动服务器。<br><s>这时就可以启动本地游戏进行测试了。</s><br>但先别急，有的服务器自带防火墙，（例如：腾讯云、阿里云）需要在web控制台手动放行。<br>还有的服务器比如雨云，没有公网ip，需要通过NAT端口映射，配置起来还算简单，点几下就能搞定。<br>具体步骤可以看<a href="https://forum.rainyun.com/t/topic/5602">官方教程</a>（懒得写了~）<br>这时就可以启动本地游戏进行测试了，具体步骤可参考<a href="https://ly7ngf.top/posts/MinecraftServer/">上次那篇原版服搭建的文章</a>。<br>进入游戏后我们切换到ssh，用指令给予玩家管理员权限，我这里以我自己的ID为例。</p><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">op Ly7ngF<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>测试一下服务器能否正常游玩，如果一切正常的话我们就可以配置后台运行了</p><h2 id="使用screen后台运行服务器">使用screen后台运行服务器</h2><p>因为像刚才一样启动服务器，我们一旦关闭ssh，服务器也会关闭。<br>因此使用screen后台运行服务器就很关键了。</p><h3 id="关闭原本的服务器进程">关闭原本的服务器进程</h3><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">stop<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="安装screen">安装screen</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">screen</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="创建一个虚拟终端">创建一个虚拟终端</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">screen</span> <span class="token parameter variable">-R</span> BetterMC<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>这里的BetterMC可改为你喜欢的名称。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>在虚拟终端内重新运行开服脚本，即可完成服务器24H运行。</p><h1>结语</h1><p>搭建模组服务器当中的坑还是不少的，希望这期教程对你有所帮助。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Minecraft </tag>
+            
+            <tag> Java </tag>
+            
+            <tag> Fabric </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>NginxProxyManager的安装和使用</title>
       <link href="/posts/config-nginxproxymanager/"/>
       <url>/posts/config-nginxproxymanager/</url>
@@ -209,29 +232,6 @@
             <tag> Hexo </tag>
             
             <tag> Cygwin </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>如何使用整合包搭建Minecraft模组服务器</title>
-      <link href="/posts/fabric-mcserver/"/>
-      <url>/posts/fabric-mcserver/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><p>最近我租赁了一台雨云的5900X的2H4G游戏云VPS，新用户首月仅需30元，相同配置下这个价格算得上相当便宜了，而且不用担心噪音，电费等问题，用来开一个Minecraft模组服务器岂不美哉。</p><h1>恰饭</h1><p>如果你也想趁假期体验一下雨云的服务器，可以用此链接注册，谢谢喵！</p><blockquote><p>注册链接: <a href="https://www.rainyun.com/MjAzOTgz_">https://www.rainyun.com/MjAzOTgz_</a><br>邀请码: MjAzOTgz</p></blockquote><h1>准备工作</h1><ul><li>服务器: <s>Racknerd 3C 2.5G 50G DC02机房</s> 雨云 Ryzen 5900X 2H4G 游戏云套餐</li><li>系统: <s>Ubuntu Server 22.04</s> Ubuntu Server 20.04 (官方没有提供最新的镜像)</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="选择并下载整合包服务端文件">选择并下载整合包服务端文件</h2><p>这次搭建我选用的是<code>BetterMC Fabric 1.20.1 V24</code>的Server版本。<br>这边放出<a href="https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/files/5023230">CurseForge链接</a>。<br>PS: 如果在国内服务器上搭建推荐先下载好服务端压缩包再用<code>Winscp</code>之类的SFTP软件上传到服务器。<br>当然，你也可以使用直接下载到服务器。<br>创建一个文件夹用于存放服务器文件，我这里叫<code>BetterMC</code>。<br>然后我们进入这个目录，并使用<code>wget</code>命令下载服务端压缩包。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> <span class="token parameter variable">-p</span> ~/BetterMC/<span class="token builtin class-name">cd</span> ~/BetterMC/<span class="token function">wget</span> <span class="token parameter variable">-O</span> BMC2.zip <span class="token string">'https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/download/5023230'</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="解压服务端文件并启动">解压服务端文件并启动</h2><p>首先安装unzip解压缩软件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">unzip</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>接着解压刚才的压缩包文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">unzip</span> BMC2.zip<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>解压完后删除刚才的压缩包文件，并赋予启动脚本可执行权限。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">rm</span> BMC2.zip<span class="token function">chmod</span> +x start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>OK,离成功已经不远了，使用<code>start.sh</code>脚本启动服务器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>PS: 有的整合包服务端文件没有提供服务器核心文件，需要自行下载并编写启动脚本，具体可参考不同整合包的CurseForge页面，或者服务端文件夹中的<code>README</code>文件，一般都会写明使用方法。<br>初次使用需要输入 <code>I agree eula</code> 来同意mojang的服务器协议。<br>随后耐心等待几分钟即可成功启动服务器。<br><s>这时就可以启动本地游戏进行测试了。</s><br>但先别急，有的服务器自带防火墙，（例如：腾讯云、阿里云）需要在web控制台手动放行。<br>还有的服务器比如雨云，没有公网ip，需要通过NAT端口映射，配置起来还算简单，点几下就能搞定。<br>具体步骤可以看<a href="https://forum.rainyun.com/t/topic/5602">官方教程</a>（懒得写了~）<br>这时就可以启动本地游戏进行测试了，具体步骤可参考<a href="https://ly7ngf.top/posts/MinecraftServer/">上次那篇原版服搭建的文章</a>。<br>进入游戏后我们切换到ssh，用指令给予玩家管理员权限，我这里以我自己的ID为例。</p><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">op Ly7ngF<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>测试一下服务器能否正常游玩，如果一切正常的话我们就可以配置后台运行了</p><h2 id="使用screen后台运行服务器">使用screen后台运行服务器</h2><p>因为像刚才一样启动服务器，我们一旦关闭ssh，服务器也会关闭。<br>因此使用screen后台运行服务器就很关键了。</p><h3 id="关闭原本的服务器进程">关闭原本的服务器进程</h3><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">stop<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="安装screen">安装screen</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">screen</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="创建一个虚拟终端">创建一个虚拟终端</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">screen</span> <span class="token parameter variable">-R</span> BetterMC<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>这里的BetterMC可改为你喜欢的名称。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>在虚拟终端内重新运行开服脚本，即可完成服务器24H运行。</p><h1>结语</h1><p>搭建模组服务器当中的坑还是不少的，希望这期教程对你有所帮助。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Minecraft </tag>
-            
-            <tag> Java </tag>
-            
-            <tag> Fabric </tag>
             
         </tags>
       
