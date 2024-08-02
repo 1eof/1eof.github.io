@@ -142,29 +142,6 @@
     
     
     <entry>
-      <title>通过Docker搭建Minecraft Java版服务器</title>
-      <link href="/posts/docker-mcserver/"/>
-      <url>/posts/docker-mcserver/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><p>最近刚好趁圣诞和新年优惠购买了一台Racknerd的DC02机房的VPS，单单用来建站恐怕是有些浪费，于是我便想着用这台机器搭建MC服务器。</p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: Ubuntu Server 22.04</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="创建安装目录">创建安装目录</h2><p>创建一个目录用于存放数据与<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/minecraft<span class="token builtin class-name">cd</span> ~/minecraft<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="编辑-docker-compose-yml-文件">编辑 docker-compose.yml 文件</h2><p>用你喜欢的编辑器创建<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">"3.8"</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">mc</span><span class="token punctuation">:</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> minecraft    <span class="token key atrule">image</span><span class="token punctuation">:</span> itzg/minecraft<span class="token punctuation">-</span>server<span class="token punctuation">:</span>java17<span class="token punctuation">-</span>alpine <span class="token comment">#根据服务器核心版本选择java版本</span>    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">stdin_open</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">"25565:25565"</span>    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">EULA</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>      <span class="token key atrule">ONLINE_MODE</span><span class="token punctuation">:</span> <span class="token string">"FALSE"</span> <span class="token comment">#关闭正版验证</span>      <span class="token key atrule">VERSION</span><span class="token punctuation">:</span> <span class="token string">"1.20.4"</span> <span class="token comment">#指定版本</span>      <span class="token key atrule">TYPE</span><span class="token punctuation">:</span> <span class="token string">"PURPUR"</span>      <span class="token key atrule">INIT_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"1G"</span>      <span class="token key atrule">MAX_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"2G"</span>      <span class="token key atrule">SERVER_NAME</span><span class="token punctuation">:</span> <span class="token string">"Ly7F"</span> <span class="token comment">#可自定义名称</span>      <span class="token key atrule">MOTD</span><span class="token punctuation">:</span> <span class="token string">"LyingFFFFFFF"</span> <span class="token comment">#可自定义MOTD</span>      <span class="token key atrule">VIEW_DISTANCE</span><span class="token punctuation">:</span> <span class="token string">"4"</span>      <span class="token key atrule">OVERRIDE_SERVER_PROPERTIES</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data <span class="token comment">#数据存放路径,可自行更改</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>使用方法</h1><p>启动游戏后选择多人游戏–添加服务器–输入服务器IP:25565，名称随意，即可连接服务器。<br>之后如果想要使用指令,可以在云服务器终端中输入</p><pre class="line-numbers language-none"><code class="language-none">docker exec -i minecraft rcon-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>输入完成后按<code>Ctrl+C</code>退出容器。</p><h1>结语</h1><p>Docker搭建相比于手动配环境还是方便很多的，省去了很多步骤，并且迁移也方便。<br>希望大家都能轻松地搭建自己的服务器。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Docker </tag>
-            
-            <tag> Minecraft </tag>
-            
-            <tag> Java </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>NginxProxyManager的安装和使用</title>
       <link href="/posts/config-nginxproxymanager/"/>
       <url>/posts/config-nginxproxymanager/</url>
@@ -182,6 +159,29 @@
             <tag> 反向代理 </tag>
             
             <tag> NginxProxyManager </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>通过Docker搭建Minecraft Java版服务器</title>
+      <link href="/posts/docker-mcserver/"/>
+      <url>/posts/docker-mcserver/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><p>最近刚好趁圣诞和新年优惠购买了一台Racknerd的DC02机房的VPS，单单用来建站恐怕是有些浪费，于是我便想着用这台机器搭建MC服务器。</p><h1>准备工作</h1><ul><li>服务器: Racknerd 3C 2.5G 50G DC02机房</li><li>系统: Ubuntu Server 22.04</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="创建安装目录">创建安装目录</h2><p>创建一个目录用于存放数据与<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/minecraft<span class="token builtin class-name">cd</span> ~/minecraft<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h2 id="编辑-docker-compose-yml-文件">编辑 docker-compose.yml 文件</h2><p>用你喜欢的编辑器创建<code>docker-compose.yml</code>文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">"3.8"</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">mc</span><span class="token punctuation">:</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> minecraft    <span class="token key atrule">image</span><span class="token punctuation">:</span> itzg/minecraft<span class="token punctuation">-</span>server<span class="token punctuation">:</span>java17<span class="token punctuation">-</span>alpine <span class="token comment">#根据服务器核心版本选择java版本</span>    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">stdin_open</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">"25565:25565"</span>    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">EULA</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>      <span class="token key atrule">ONLINE_MODE</span><span class="token punctuation">:</span> <span class="token string">"FALSE"</span> <span class="token comment">#关闭正版验证</span>      <span class="token key atrule">VERSION</span><span class="token punctuation">:</span> <span class="token string">"1.20.4"</span> <span class="token comment">#指定版本</span>      <span class="token key atrule">TYPE</span><span class="token punctuation">:</span> <span class="token string">"PURPUR"</span>      <span class="token key atrule">INIT_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"1G"</span>      <span class="token key atrule">MAX_MEMORY</span><span class="token punctuation">:</span> <span class="token string">"2G"</span>      <span class="token key atrule">SERVER_NAME</span><span class="token punctuation">:</span> <span class="token string">"Ly7F"</span> <span class="token comment">#可自定义名称</span>      <span class="token key atrule">MOTD</span><span class="token punctuation">:</span> <span class="token string">"LyingFFFFFFF"</span> <span class="token comment">#可自定义MOTD</span>      <span class="token key atrule">VIEW_DISTANCE</span><span class="token punctuation">:</span> <span class="token string">"4"</span>      <span class="token key atrule">OVERRIDE_SERVER_PROPERTIES</span><span class="token punctuation">:</span> <span class="token string">"TRUE"</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data <span class="token comment">#数据存放路径,可自行更改</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>使用方法</h1><p>启动游戏后选择多人游戏–添加服务器–输入服务器IP:25565，名称随意，即可连接服务器。<br>之后如果想要使用指令,可以在云服务器终端中输入</p><pre class="line-numbers language-none"><code class="language-none">docker exec -i minecraft rcon-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>输入完成后按<code>Ctrl+C</code>退出容器。</p><h1>结语</h1><p>Docker搭建相比于手动配环境还是方便很多的，省去了很多步骤，并且迁移也方便。<br>希望大家都能轻松地搭建自己的服务器。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Docker </tag>
+            
+            <tag> Minecraft </tag>
+            
+            <tag> Java </tag>
             
         </tags>
       
