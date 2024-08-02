@@ -142,31 +142,6 @@
     
     
     <entry>
-      <title>NginxProxyManager的安装和使用</title>
-      <link href="/posts/config-nginxproxymanager/"/>
-      <url>/posts/config-nginxproxymanager/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><p>从Caddy迁移到NginxProxyManager（以下简称NPM）已经有一段时间了，分享一下我的配置过程。</p><ul><li>服务器: Vmiss 中国-香港-优化BGP Ⅱ 1C1G套餐</li><li>系统: Debian 12</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>一枚域名，并解析到服务器</li></ul><h1>开始部署</h1><p>创建安装目录</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/nginx-proxy-manager <span class="token operator">&amp;&amp;</span> <span class="token builtin class-name">cd</span> ~/nginx-proxy-manager<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>创建docker-compose.yml</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">'3'</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">app</span><span class="token punctuation">:</span>    <span class="token key atrule">image</span><span class="token punctuation">:</span> <span class="token string">'chishin/nginx-proxy-manager-zh:release'</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>proxy<span class="token punctuation">-</span>manager<span class="token punctuation">-</span>zh    <span class="token key atrule">restart</span><span class="token punctuation">:</span> always    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">PUID</span><span class="token punctuation">:</span> <span class="token number">1000</span>      <span class="token key atrule">PGID</span><span class="token punctuation">:</span> <span class="token number">1000</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">'80:80'</span>      <span class="token punctuation">-</span> <span class="token string">'81:81'</span>      <span class="token punctuation">-</span> <span class="token string">'443:443'</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data      <span class="token punctuation">-</span> ./letsencrypt<span class="token punctuation">:</span>/etc/letsencrypt<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>粘贴以上内容后依次按下<code>Ctrl+S``Ctrl+O</code>保存并退出</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后使用这条指令启动NPM容器<br>访问<code>IP:81</code>，打开NPM的登录页面</p><blockquote><p>默认账户: <a href="mailto:admin@example.com">admin@example.com</a><br>默认密码: changeme<br>登陆后会要求重新设置用户名和密码</p></blockquote><h1>使用教程</h1><p><s>懒得写了，以后有空再补，嘿嘿。</s><br>目前教程计划：</p><ol><li>反向代理</li><li>静态网站</li><li>申请泛解析证书</li></ol><h1>结语</h1><p>NPM相比Caddy来说具有WebUI方便管理，不用每次都ssh连接到服务器再手动修改配置文件+重载配置。<br>这也是我迁移到NPM的主要理由。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Docker </tag>
-            
-            <tag> SSL </tag>
-            
-            <tag> 反向代理 </tag>
-            
-            <tag> NginxProxyManager </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>通过Docker搭建Minecraft Java版服务器</title>
       <link href="/posts/docker-mcserver/"/>
       <url>/posts/docker-mcserver/</url>
@@ -205,6 +180,31 @@
             <tag> Java </tag>
             
             <tag> Fabric </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>NginxProxyManager的安装和使用</title>
+      <link href="/posts/config-nginxproxymanager/"/>
+      <url>/posts/config-nginxproxymanager/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><p>从Caddy迁移到NginxProxyManager（以下简称NPM）已经有一段时间了，分享一下我的配置过程。</p><ul><li>服务器: Vmiss 中国-香港-优化BGP Ⅱ 1C1G套餐</li><li>系统: Debian 12</li><li>做好基础设置，并安装Docker（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>一枚域名，并解析到服务器</li></ul><h1>开始部署</h1><p>创建安装目录</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> ~/nginx-proxy-manager <span class="token operator">&amp;&amp;</span> <span class="token builtin class-name">cd</span> ~/nginx-proxy-manager<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>创建docker-compose.yml</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">'3'</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">app</span><span class="token punctuation">:</span>    <span class="token key atrule">image</span><span class="token punctuation">:</span> <span class="token string">'chishin/nginx-proxy-manager-zh:release'</span>    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> nginx<span class="token punctuation">-</span>proxy<span class="token punctuation">-</span>manager<span class="token punctuation">-</span>zh    <span class="token key atrule">restart</span><span class="token punctuation">:</span> always    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token key atrule">PUID</span><span class="token punctuation">:</span> <span class="token number">1000</span>      <span class="token key atrule">PGID</span><span class="token punctuation">:</span> <span class="token number">1000</span>    <span class="token key atrule">ports</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> <span class="token string">'80:80'</span>      <span class="token punctuation">-</span> <span class="token string">'81:81'</span>      <span class="token punctuation">-</span> <span class="token string">'443:443'</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./data<span class="token punctuation">:</span>/data      <span class="token punctuation">-</span> ./letsencrypt<span class="token punctuation">:</span>/etc/letsencrypt<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>粘贴以上内容后依次按下<code>Ctrl+S``Ctrl+O</code>保存并退出</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后使用这条指令启动NPM容器<br>访问<code>IP:81</code>，打开NPM的登录页面</p><blockquote><p>默认账户: <a href="mailto:admin@example.com">admin@example.com</a><br>默认密码: changeme<br>登陆后会要求重新设置用户名和密码</p></blockquote><h1>使用教程</h1><p><s>懒得写了，以后有空再补，嘿嘿。</s><br>目前教程计划：</p><ol><li>反向代理</li><li>静态网站</li><li>申请泛解析证书</li></ol><h1>结语</h1><p>NPM相比Caddy来说具有WebUI方便管理，不用每次都ssh连接到服务器再手动修改配置文件+重载配置。<br>这也是我迁移到NPM的主要理由。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Docker </tag>
+            
+            <tag> SSL </tag>
+            
+            <tag> 反向代理 </tag>
+            
+            <tag> NginxProxyManager </tag>
             
         </tags>
       
