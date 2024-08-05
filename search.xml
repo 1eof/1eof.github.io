@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>macOS如何安装并配置SmartDNS</title>
+      <link href="/posts/macos-smartdns/"/>
+      <url>/posts/macos-smartdns/</url>
+      
+        <content type="html"><![CDATA[<p>本文将介绍如何在macOS系统上安装SmartDNS并设置DNS分流，以及广告拦截。</p><h1>准备工作</h1><ol><li>安装好homebrew</li><li>确保53端口没有被占用</li></ol><h1>安装</h1><p>SmartDNS的安装十分简单，直接用homebrew就可以搞定。<br><strong>PS:本次安装的是Rust移植版的SmartDNS,原版只有Linux版本，因此原版的部分配置是不适用的。</strong></p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">brew <span class="token function">install</span> smartdns<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>随后启动SmartDNS服务。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> smartdns <span class="token function">service</span> start<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>homebrew安装的SmartDNS的默认配置文件存放在<code>/opt/homebrew/etc/smartdns</code>目录下的<code>smartdns.conf</code>文件。<br>稍后我会贴出我的配置。<br>我建议在更改完配置文件后，使用以下命令测试配置是否有效。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">smartdns <span class="token builtin class-name">test</span> <span class="token parameter variable">-c</span> /opt/homebrew/etc/smartdns/smartdns.conf<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>DNS分流</h1><p>首先克隆’dnsmasq-china-list’项目，这个项目包含了大多数国内的域名。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">git</span> clone <span class="token parameter variable">--depth</span> <span class="token number">1</span> https://github.com/felixonmars/dnsmasq-china-list.git<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后需要更改’Makefile’,将最上面的两行更改为:</p><pre class="line-numbers language-Makefile" data-language="Makefile"><code class="language-Makefile">SERVER&#x3D;domesticSMARTDNS_SPEEDTEST_MODE&#x3D;tcp:80<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>这样配置的意思是将所有包含在’dnsmasq-china-list’中的域名使用’domestic’规则组进行解析，并且设置测速模式为仅测速80端口。<br>保存配置后使用以下命令生成’SmartDNS’的配置:</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> smartdns-domain-rules<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>然后将在SmartDNS配置中包含这些配置文件就可以了。</p><h1>广告拦截</h1><p>在SmartDNS中实现广告拦截十分简单，下载广告拦截的配置文件随后在’smartdns.conf’中包含即可。<br>我个人的是’anti-ad’这个广告过滤列表。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> https://anti-ad.net/anti-ad-for-smartdns.conf <span class="token parameter variable">-O</span> /opt/homebrew/etc/smartdns/anti-ad.conf<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h1>完整配置</h1><pre class="line-numbers language-properties" data-language="properties"><code class="language-properties"><span class="token comment"># Logs</span><span class="token key attr-name">log-level</span> <span class="token value attr-value">info</span><span class="token comment"># Include files</span><span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/accelerated-domains.conf</span><span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/apple.conf</span><span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/google.conf</span><span class="token key attr-name">conf-file</span> <span class="token value attr-value">anti-ad.conf</span><span class="token comment"># Listen ipv4</span><span class="token key attr-name">bind</span> <span class="token punctuation">:</span><span class="token value attr-value">53</span><span class="token comment"># Cache</span><span class="token key attr-name">cache-persist</span> <span class="token value attr-value">yes</span><span class="token key attr-name">serve-expired</span> <span class="token value attr-value">yes</span><span class="token key attr-name">serve-expired-ttl</span> <span class="token value attr-value">86400</span><span class="token key attr-name">prefetch-domain</span> <span class="token value attr-value">yes</span><span class="token comment"># Speedtest</span><span class="token key attr-name">speed-check-mode</span> <span class="token value attr-value">none</span><span class="token key attr-name">response-mode</span> <span class="token value attr-value">fastest-response</span><span class="token comment"># Disable TYPE65 and ipv6 resolve</span><span class="token key attr-name">force-qtype-SOA</span> <span class="token value attr-value">28,65</span><span class="token comment"># Disable dualstack IP selection</span><span class="token key attr-name">dualstack-ip-selection</span> <span class="token value attr-value">no</span><span class="token comment"># Upstream DNS</span><span class="token comment">## Default group</span><span class="token key attr-name">server-tls</span> <span class="token value attr-value">1.1.1.1 -b</span><span class="token key attr-name">server-tls</span> <span class="token value attr-value">1.0.0.1 -b</span><span class="token key attr-name">server-https</span> <span class="token value attr-value">https://cloudflare-dns.com/dns-query</span><span class="token key attr-name">server-https</span> <span class="token value attr-value">https://dns.sb/dns-query</span><span class="token key attr-name">server-https</span> <span class="token value attr-value">https://doh.opendns.com/dns-query</span><span class="token comment">## Domestic group</span><span class="token key attr-name">server-tls</span> <span class="token value attr-value">223.5.5.5 -g domestic -e -b</span><span class="token key attr-name">server-tls</span> <span class="token value attr-value">223.6.6.6 -g domestic -e -b</span><span class="token key attr-name">server-https</span> <span class="token value attr-value">https://dns.alidns.com/dns-query -g domestic -e</span><span class="token key attr-name">server-https</span> <span class="token value attr-value">https://doh.pub/dns-query -g domestic -e</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Mac mini </tag>
+            
+            <tag> macOS </tag>
+            
+            <tag> SmartDNS </tag>
+            
+            <tag> DNS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Hello World</title>
       <link href="/posts/hello-world/"/>
       <url>/posts/hello-world/</url>
@@ -96,29 +121,6 @@
     
     
     <entry>
-      <title>Docker安装B站自动签到、抽奖工具</title>
-      <link href="/posts/bili-tools/"/>
-      <url>/posts/bili-tools/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><h2 id="简介">简介</h2><blockquote><p>官网描述:B 站（bilibili）自动任务工具，支持docker、青龙、k8s等多种部署方式。敏感肌也能用。</p></blockquote><h2 id="功能介绍">功能介绍</h2><p>详细功能如下：</p><ul><li>扫码登录，自动更新cookie</li><li>每日获取满额升级经验（登录、投币、点赞、分享视频）（支持指定支持up主）</li><li>直播间挂机</li><li>每天漫画签到</li><li>每天直播签到</li><li>直播中心银瓜子兑换为硬币</li><li>每月领取大会员赠送的 5 张 B 币券和福利（忘记或者不领就浪费了哦）</li><li>每月领取大会员漫画福利</li><li>月底在 B 币券过期前进行充电（支持指定想要支持的up主，如果没有喜欢的up，也可以为自己充个电啊，做个用爱为自己发电的人~）</li><li>直播中心天选时刻自动参与抽奖</li><li>批量取关</li><li>大会员大积分任务</li><li>支持多账号</li><li>理论上支持所有远端的日志推送（默认支持推送到Telegram、企业微信、钉钉、PushPlus、Server酱、钉钉、酷推，另外也支持自定义推送到任意api）</li></ul><p>前段时间在网上了解到了这个项目，于是我就在自己的VPS上运行了一下，发现效果不错，今天就来介绍一下这个项目。</p><h1>相关地址</h1><p><strong>Github仓库</strong>: <a href="https://github.com/RayWangQvQ/BiliBiliToolPro">https://github.com/RayWangQvQ/BiliBiliToolPro</a><br><strong>官方文档</strong>: <a href="https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md">https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md</a></p><h1>开始部署</h1><h2 id="创建安装目录并下载文件">创建安装目录并下载文件</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 创建目录</span><span class="token function">mkdir</span> bili <span class="token operator">&amp;&amp;</span> <span class="token builtin class-name">cd</span> bili<span class="token comment"># 下载</span><span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/src/Ray.BiliBiliTool.Console/appsettings.json<span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/docker/sample/cookies.json<span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/docker/sample/docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>下载好所需文件之后我们需要编辑一下应用配置文件以及compose文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">'3.9'</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">bilibili_tool</span><span class="token punctuation">:</span>    <span class="token key atrule">image</span><span class="token punctuation">:</span> ghcr.io/raywangqvq/bilibili_tool_pro    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> bili    <span class="token key atrule">restart</span><span class="token punctuation">:</span> unless<span class="token punctuation">-</span>stopped    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./Logs<span class="token punctuation">:</span>/app/Logs      <span class="token punctuation">-</span> ./appsettings.json<span class="token punctuation">:</span>/app/appsettings.json      <span class="token punctuation">-</span> ./cookies.json<span class="token punctuation">:</span>/app/cookies.json    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token comment"># 定时任务</span>      <span class="token punctuation">-</span> Ray_DailyTaskConfig__Cron=0 15 * * *<span class="token comment">#      - Ray_LiveLotteryTaskConfig__Cron=0 22 * * *</span><span class="token comment">#      - Ray_UnfollowBatchedTaskConfig__Cron=0 6 1 * *</span>      <span class="token punctuation">-</span> Ray_VipBigPointConfig__Cron=7 1 * * *<span class="token comment">#      - Ray_LiveFansMedalTaskConfig__Cron=5 0 * * *</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>这边用<code>#</code>注释掉我们不需要的定时任务，然后<code>Ctrl+S</code> <code>Ctrl+X</code>保存并退出。<br>同理编辑<code>appsettings.json</code>，这边我就不演示了，详细内容可看<a href="https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md">官方文档</a>。</p><h1>启动</h1><p>使用<code>docker compose up -d</code>命令在后台启动容器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 启动</span><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h1>结语</h1><p>按照以上方法安装完之后，只要服务器不关机，BiliBiliTool每天都会定时为我们执行设定好的任务，对于我这种懒人来说非常实用。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> 哔哩哔哩 </tag>
-            
-            <tag> Github </tag>
-            
-            <tag> Docker </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>云服务器安装Caddy并配置通配符证书</title>
       <link href="/posts/config-caddy/"/>
       <url>/posts/config-caddy/</url>
@@ -142,6 +144,29 @@
     
     
     <entry>
+      <title>Docker安装B站自动签到、抽奖工具</title>
+      <link href="/posts/bili-tools/"/>
+      <url>/posts/bili-tools/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><h2 id="简介">简介</h2><blockquote><p>官网描述:B 站（bilibili）自动任务工具，支持docker、青龙、k8s等多种部署方式。敏感肌也能用。</p></blockquote><h2 id="功能介绍">功能介绍</h2><p>详细功能如下：</p><ul><li>扫码登录，自动更新cookie</li><li>每日获取满额升级经验（登录、投币、点赞、分享视频）（支持指定支持up主）</li><li>直播间挂机</li><li>每天漫画签到</li><li>每天直播签到</li><li>直播中心银瓜子兑换为硬币</li><li>每月领取大会员赠送的 5 张 B 币券和福利（忘记或者不领就浪费了哦）</li><li>每月领取大会员漫画福利</li><li>月底在 B 币券过期前进行充电（支持指定想要支持的up主，如果没有喜欢的up，也可以为自己充个电啊，做个用爱为自己发电的人~）</li><li>直播中心天选时刻自动参与抽奖</li><li>批量取关</li><li>大会员大积分任务</li><li>支持多账号</li><li>理论上支持所有远端的日志推送（默认支持推送到Telegram、企业微信、钉钉、PushPlus、Server酱、钉钉、酷推，另外也支持自定义推送到任意api）</li></ul><p>前段时间在网上了解到了这个项目，于是我就在自己的VPS上运行了一下，发现效果不错，今天就来介绍一下这个项目。</p><h1>相关地址</h1><p><strong>Github仓库</strong>: <a href="https://github.com/RayWangQvQ/BiliBiliToolPro">https://github.com/RayWangQvQ/BiliBiliToolPro</a><br><strong>官方文档</strong>: <a href="https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md">https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md</a></p><h1>开始部署</h1><h2 id="创建安装目录并下载文件">创建安装目录并下载文件</h2><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 创建目录</span><span class="token function">mkdir</span> bili <span class="token operator">&amp;&amp;</span> <span class="token builtin class-name">cd</span> bili<span class="token comment"># 下载</span><span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/src/Ray.BiliBiliTool.Console/appsettings.json<span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/docker/sample/cookies.json<span class="token function">wget</span> https://raw.githubusercontent.com/RayWangQvQ/BiliBiliToolPro/main/docker/sample/docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>下载好所需文件之后我们需要编辑一下应用配置文件以及compose文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nano</span> docker-compose.yml<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><pre class="line-numbers language-yaml" data-language="yaml"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">'3.9'</span><span class="token key atrule">services</span><span class="token punctuation">:</span>  <span class="token key atrule">bilibili_tool</span><span class="token punctuation">:</span>    <span class="token key atrule">image</span><span class="token punctuation">:</span> ghcr.io/raywangqvq/bilibili_tool_pro    <span class="token key atrule">container_name</span><span class="token punctuation">:</span> bili    <span class="token key atrule">restart</span><span class="token punctuation">:</span> unless<span class="token punctuation">-</span>stopped    <span class="token key atrule">tty</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>      <span class="token punctuation">-</span> ./Logs<span class="token punctuation">:</span>/app/Logs      <span class="token punctuation">-</span> ./appsettings.json<span class="token punctuation">:</span>/app/appsettings.json      <span class="token punctuation">-</span> ./cookies.json<span class="token punctuation">:</span>/app/cookies.json    <span class="token key atrule">environment</span><span class="token punctuation">:</span>      <span class="token comment"># 定时任务</span>      <span class="token punctuation">-</span> Ray_DailyTaskConfig__Cron=0 15 * * *<span class="token comment">#      - Ray_LiveLotteryTaskConfig__Cron=0 22 * * *</span><span class="token comment">#      - Ray_UnfollowBatchedTaskConfig__Cron=0 6 1 * *</span>      <span class="token punctuation">-</span> Ray_VipBigPointConfig__Cron=7 1 * * *<span class="token comment">#      - Ray_LiveFansMedalTaskConfig__Cron=5 0 * * *</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><p>这边用<code>#</code>注释掉我们不需要的定时任务，然后<code>Ctrl+S</code> <code>Ctrl+X</code>保存并退出。<br>同理编辑<code>appsettings.json</code>，这边我就不演示了，详细内容可看<a href="https://github.com/RayWangQvQ/BiliBiliToolPro/blob/main/README.md">官方文档</a>。</p><h1>启动</h1><p>使用<code>docker compose up -d</code>命令在后台启动容器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 启动</span><span class="token function">docker</span> compose up <span class="token parameter variable">-d</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><h1>结语</h1><p>按照以上方法安装完之后，只要服务器不关机，BiliBiliTool每天都会定时为我们执行设定好的任务，对于我这种懒人来说非常实用。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 哔哩哔哩 </tag>
+            
+            <tag> Github </tag>
+            
+            <tag> Docker </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>NginxProxyManager的安装和使用</title>
       <link href="/posts/config-nginxproxymanager/"/>
       <url>/posts/config-nginxproxymanager/</url>
@@ -152,36 +177,13 @@
       
         <tags>
             
-            <tag> Docker </tag>
-            
             <tag> SSL </tag>
             
             <tag> 反向代理 </tag>
             
+            <tag> Docker </tag>
+            
             <tag> NginxProxyManager </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>如何使用整合包搭建Minecraft模组服务器</title>
-      <link href="/posts/fabric-mcserver/"/>
-      <url>/posts/fabric-mcserver/</url>
-      
-        <content type="html"><![CDATA[<h1>前言</h1><p>最近我租赁了一台雨云的5900X的2H4G游戏云VPS，新用户首月仅需30元，相同配置下这个价格算得上相当便宜了，而且不用担心噪音，电费等问题，用来开一个Minecraft模组服务器岂不美哉。</p><h1>恰饭</h1><p>如果你也想趁假期体验一下雨云的服务器，可以用此链接注册，谢谢喵！</p><blockquote><p>注册链接: <a href="https://www.rainyun.com/MjAzOTgz_">https://www.rainyun.com/MjAzOTgz_</a><br>邀请码: MjAzOTgz</p></blockquote><h1>准备工作</h1><ul><li>服务器: <s>Racknerd 3C 2.5G 50G DC02机房</s> 雨云 Ryzen 5900X 2H4G 游戏云套餐</li><li>系统: <s>Ubuntu Server 22.04</s> Ubuntu Server 20.04 (官方没有提供最新的镜像)</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="选择并下载整合包服务端文件">选择并下载整合包服务端文件</h2><p>这次搭建我选用的是<code>BetterMC Fabric 1.20.1 V24</code>的Server版本。<br>这边放出<a href="https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/files/5023230">CurseForge链接</a>。<br>PS: 如果在国内服务器上搭建推荐先下载好服务端压缩包再用<code>Winscp</code>之类的SFTP软件上传到服务器。<br>当然，你也可以使用直接下载到服务器。<br>创建一个文件夹用于存放服务器文件，我这里叫<code>BetterMC</code>。<br>然后我们进入这个目录，并使用<code>wget</code>命令下载服务端压缩包。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> <span class="token parameter variable">-p</span> ~/BetterMC/<span class="token builtin class-name">cd</span> ~/BetterMC/<span class="token function">wget</span> <span class="token parameter variable">-O</span> BMC2.zip <span class="token string">'https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/download/5023230'</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="解压服务端文件并启动">解压服务端文件并启动</h2><p>首先安装unzip解压缩软件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">unzip</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>接着解压刚才的压缩包文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">unzip</span> BMC2.zip<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>解压完后删除刚才的压缩包文件，并赋予启动脚本可执行权限。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">rm</span> BMC2.zip<span class="token function">chmod</span> +x start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>OK,离成功已经不远了，使用<code>start.sh</code>脚本启动服务器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>PS: 有的整合包服务端文件没有提供服务器核心文件，需要自行下载并编写启动脚本，具体可参考不同整合包的CurseForge页面，或者服务端文件夹中的<code>README</code>文件，一般都会写明使用方法。<br>初次使用需要输入 <code>I agree eula</code> 来同意mojang的服务器协议。<br>随后耐心等待几分钟即可成功启动服务器。<br><s>这时就可以启动本地游戏进行测试了。</s><br>但先别急，有的服务器自带防火墙，（例如：腾讯云、阿里云）需要在web控制台手动放行。<br>还有的服务器比如雨云，没有公网ip，需要通过NAT端口映射，配置起来还算简单，点几下就能搞定。<br>具体步骤可以看<a href="https://forum.rainyun.com/t/topic/5602">官方教程</a>（懒得写了~）<br>这时就可以启动本地游戏进行测试了，具体步骤可参考<a href="https://ly7ngf.top/posts/MinecraftServer/">上次那篇原版服搭建的文章</a>。<br>进入游戏后我们切换到ssh，用指令给予玩家管理员权限，我这里以我自己的ID为例。</p><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">op Ly7ngF<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>测试一下服务器能否正常游玩，如果一切正常的话我们就可以配置后台运行了</p><h2 id="使用screen后台运行服务器">使用screen后台运行服务器</h2><p>因为像刚才一样启动服务器，我们一旦关闭ssh，服务器也会关闭。<br>因此使用screen后台运行服务器就很关键了。</p><h3 id="关闭原本的服务器进程">关闭原本的服务器进程</h3><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">stop<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="安装screen">安装screen</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">screen</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="创建一个虚拟终端">创建一个虚拟终端</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">screen</span> <span class="token parameter variable">-R</span> BetterMC<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>这里的BetterMC可改为你喜欢的名称。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>在虚拟终端内重新运行开服脚本，即可完成服务器24H运行。</p><h1>结语</h1><p>搭建模组服务器当中的坑还是不少的，希望这期教程对你有所帮助。</p>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> Minecraft </tag>
-            
-            <tag> Java </tag>
-            
-            <tag> Fabric </tag>
             
         </tags>
       
@@ -205,6 +207,29 @@
             <tag> Minecraft </tag>
             
             <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>如何使用整合包搭建Minecraft模组服务器</title>
+      <link href="/posts/fabric-mcserver/"/>
+      <url>/posts/fabric-mcserver/</url>
+      
+        <content type="html"><![CDATA[<h1>前言</h1><p>最近我租赁了一台雨云的5900X的2H4G游戏云VPS，新用户首月仅需30元，相同配置下这个价格算得上相当便宜了，而且不用担心噪音，电费等问题，用来开一个Minecraft模组服务器岂不美哉。</p><h1>恰饭</h1><p>如果你也想趁假期体验一下雨云的服务器，可以用此链接注册，谢谢喵！</p><blockquote><p>注册链接: <a href="https://www.rainyun.com/MjAzOTgz_">https://www.rainyun.com/MjAzOTgz_</a><br>邀请码: MjAzOTgz</p></blockquote><h1>准备工作</h1><ul><li>服务器: <s>Racknerd 3C 2.5G 50G DC02机房</s> 雨云 Ryzen 5900X 2H4G 游戏云套餐</li><li>系统: <s>Ubuntu Server 22.04</s> Ubuntu Server 20.04 (官方没有提供最新的镜像)</li><li>做好基础设置，<s>并安装Docker</s>（<a href="https://ly7ngf.top/posts/ServerCommand/">参考之前的文章</a>）</li><li>【非必须】一枚域名，并解析到服务器</li></ul><h1>搭建过程</h1><h2 id="选择并下载整合包服务端文件">选择并下载整合包服务端文件</h2><p>这次搭建我选用的是<code>BetterMC Fabric 1.20.1 V24</code>的Server版本。<br>这边放出<a href="https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/files/5023230">CurseForge链接</a>。<br>PS: 如果在国内服务器上搭建推荐先下载好服务端压缩包再用<code>Winscp</code>之类的SFTP软件上传到服务器。<br>当然，你也可以使用直接下载到服务器。<br>创建一个文件夹用于存放服务器文件，我这里叫<code>BetterMC</code>。<br>然后我们进入这个目录，并使用<code>wget</code>命令下载服务端压缩包。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">mkdir</span> <span class="token parameter variable">-p</span> ~/BetterMC/<span class="token builtin class-name">cd</span> ~/BetterMC/<span class="token function">wget</span> <span class="token parameter variable">-O</span> BMC2.zip <span class="token string">'https://www.curseforge.com/minecraft/modpacks/better-mc-fabric-bmc2/download/5023230'</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre><h2 id="解压服务端文件并启动">解压服务端文件并启动</h2><p>首先安装unzip解压缩软件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">unzip</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>接着解压刚才的压缩包文件</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">unzip</span> BMC2.zip<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>解压完后删除刚才的压缩包文件，并赋予启动脚本可执行权限。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">rm</span> BMC2.zip<span class="token function">chmod</span> +x start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre><p>OK,离成功已经不远了，使用<code>start.sh</code>脚本启动服务器</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>PS: 有的整合包服务端文件没有提供服务器核心文件，需要自行下载并编写启动脚本，具体可参考不同整合包的CurseForge页面，或者服务端文件夹中的<code>README</code>文件，一般都会写明使用方法。<br>初次使用需要输入 <code>I agree eula</code> 来同意mojang的服务器协议。<br>随后耐心等待几分钟即可成功启动服务器。<br><s>这时就可以启动本地游戏进行测试了。</s><br>但先别急，有的服务器自带防火墙，（例如：腾讯云、阿里云）需要在web控制台手动放行。<br>还有的服务器比如雨云，没有公网ip，需要通过NAT端口映射，配置起来还算简单，点几下就能搞定。<br>具体步骤可以看<a href="https://forum.rainyun.com/t/topic/5602">官方教程</a>（懒得写了~）<br>这时就可以启动本地游戏进行测试了，具体步骤可参考<a href="https://ly7ngf.top/posts/MinecraftServer/">上次那篇原版服搭建的文章</a>。<br>进入游戏后我们切换到ssh，用指令给予玩家管理员权限，我这里以我自己的ID为例。</p><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">op Ly7ngF<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>测试一下服务器能否正常游玩，如果一切正常的话我们就可以配置后台运行了</p><h2 id="使用screen后台运行服务器">使用screen后台运行服务器</h2><p>因为像刚才一样启动服务器，我们一旦关闭ssh，服务器也会关闭。<br>因此使用screen后台运行服务器就很关键了。</p><h3 id="关闭原本的服务器进程">关闭原本的服务器进程</h3><pre class="line-numbers language-minecraft" data-language="minecraft"><code class="language-minecraft">stop<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="安装screen">安装screen</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> <span class="token function">screen</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><h3 id="创建一个虚拟终端">创建一个虚拟终端</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">screen</span> <span class="token parameter variable">-R</span> BetterMC<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>这里的BetterMC可改为你喜欢的名称。</p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">./start.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p>在虚拟终端内重新运行开服脚本，即可完成服务器24H运行。</p><h1>结语</h1><p>搭建模组服务器当中的坑还是不少的，希望这期教程对你有所帮助。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> Minecraft </tag>
+            
+            <tag> Java </tag>
+            
+            <tag> Fabric </tag>
             
         </tags>
       
@@ -250,9 +275,9 @@
       
         <tags>
             
-            <tag> Docker </tag>
-            
             <tag> SSL </tag>
+            
+            <tag> Docker </tag>
             
             <tag> Debian </tag>
             

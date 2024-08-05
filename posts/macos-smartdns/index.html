@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><title>macOS如何安装并配置SmartDNS | 1eof's Blog</title><noscript>Please enable JavaScript to view the site</noscript><link rel="icon" href="https://s2.loli.net/2024/06/15/RUsmewShJG47o2r.webp"><!-- index.css--><link rel="stylesheet" href="/css/index.css?v=2.0.6"><!-- inject head--><link rel="canonical" href="https://blog.ly7ngf.top/posts/macos-smartdns/"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"><!-- aplayer--><!-- swiper--><!-- fancybox ui--><!-- katex--><!-- Open Graph--><meta name="description" content="本文将介绍如何在macOS系统上安装SmartDNS并设置DNS分流，以及广告拦截。 准备工作 安装好homebrew 确保53端口没有被占用 安装 SmartDNS的安装十分简单，直接用homebrew就可以搞定。 PS:本次安装的是Rust移植版的SmartDNS,原版只有Linux版本，因"><!-- pwa--><meta name="apple-mobile-web-app-capable" content="1eof's Blog"><meta name="theme-color" content="var(--efu-main)"><meta name="apple-mobile-web-app-status-bar-style" content="var(--efu-main)"><link rel="bookmark" href="https://s2.loli.net/2024/06/15/RUsmewShJG47o2r.webp"><link rel="apple-touch-icon" href="https://s2.loli.net/2024/06/15/RUsmewShJG47o2r.webp" sizes="180x180"><script>console.log(' %c Solitude %c ' + '2.0.6' + ' %c https://github.com/everfu/hexo-theme-solitude',
+    'background:#35495e ; padding: 1px; border-radius: 3px 0 0 3px;  color: #fff',
+    'background:#ff9a9a ; padding: 1px; border-radius: 0 3px 3px 0;  color: #fff',
+    'background:unset ; padding: 1px; border-radius: 0 3px 3px 0;  color: #fff')
+</script><script>(()=>{
+        const saveToLocal = {
+            set: function setWithExpiry(key, value, ttl) {
+                if (ttl === 0)
+                    return
+                const now = new Date()
+                const expiryDay = ttl * 86400000
+                const item = {
+                    value: value,
+                    expiry: now.getTime() + expiryDay
+                }
+                localStorage.setItem(key, JSON.stringify(item))
+            },
+            get: function getWithExpiry(key) {
+                const itemStr = localStorage.getItem(key)
+    
+                if (!itemStr) {
+                    return undefined
+                }
+                const item = JSON.parse(itemStr)
+                const now = new Date()
+    
+                if (now.getTime() > item.expiry) {
+                    localStorage.removeItem(key)
+                    return undefined
+                }
+                return item.value
+            }
+        };
+        window.utils = {
+            saveToLocal: saveToLocal,
+            getCSS: (url, id = false) => new Promise((resolve, reject) => {
+              const link = document.createElement('link')
+              link.rel = 'stylesheet'
+              link.href = url
+              if (id) link.id = id
+              link.onerror = reject
+              link.onload = link.onreadystatechange = function() {
+                const loadState = this.readyState
+                if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+                link.onload = link.onreadystatechange = null
+                resolve()
+              }
+              document.head.appendChild(link)
+            }),
+            getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+              const script = document.createElement('script')
+              script.src = url
+              script.async = true
+              script.onerror = reject
+              script.onload = script.onreadystatechange = function() {
+                const loadState = this.readyState
+                if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+                script.onload = script.onreadystatechange = null
+                resolve()
+              }
+    
+              Object.keys(attr).forEach(key => {
+                script.setAttribute(key, attr[key])
+              })
+    
+              document.head.appendChild(script)
+            }),
+            addGlobalFn: (key, fn, name = false, parent = window) => {
+                const globalFn = parent.globalFn || {}
+                const keyObj = globalFn[key] || {}
+        
+                if (name && keyObj[name]) return
+        
+                name = name || Object.keys(keyObj).length
+                keyObj[name] = fn
+                globalFn[key] = keyObj
+                parent.globalFn = globalFn
+            },
+        }
+    })()</script><!-- global head--><script>const GLOBAL_CONFIG = {
+    root: '/',
+    algolia: undefined,
+    localsearch: undefined,
+    runtime: '2023-12-16 00:00:00',
+    lazyload: {
+        enable: false,
+        error: '/img/error_load.avif'
+    },
+    copyright: {"limit":50,"author":"Author: Leo","link":"Link: ","source":"Source: 1eof's Blog","info":"Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source."},
+    highlight: {"limit":200,"expand":true,"copy":true,"syntax":"prismjs"},
+    randomlink: false,
+    lang: {"theme":{"dark":"Dark","light":"Light"},"copy":{"success":"Copied","error":"Copy failed"},"backtop":"Back to top","time":{"day":" days ago","hour":" hours ago","just":"just","min":" minutes ago","month":" months ago"},"day":" days","f12":"Developer mode is turned on, please follow the GPL.","totalk":"You don't need to delete blank lines, just type in your comments."},
+    aside: {
+        sayhello: {
+            morning: "✨ Good morning. It's a new day",
+            noon: "It's time for a midday break",
+            afternoon: "Tea time. 🍵",
+            night: "early bedtime",
+            goodnight: "Good night 😴",
+        },
+        sayhello2: [],
+        sayhello3: {
+            prefix: 'Long time no see, ',
+            back: 'Welcome back again,',
+        },
+    },
+    covercolor: {
+        enable: false
+    },
+    comment: false,
+    lightbox: 'mediumZoom',
+    post_ai: false,
+    right_menu: false,
+    lure: false,
+    expire: false,
+};</script><!-- page-config head--><script id="config-diff">var PAGE_CONFIG = {
+    is_post: true,
+    is_page: false,
+    is_home: false,
+    page: '',
+    toc: true,
+    comment: false,
+    ai_text: false
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body id="body"><!-- universe--><!-- background img--><!-- loading--><!-- console--><!-- sidebar--><div id="sidebar" style="zoom: 1;"><div id="menu-mask" style="display: none;"></div><div id="sidebar-menus"><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">Archives</div><div class="length-num">12</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">31</div></a></div></div></div><span class="sidebar-menu-item-title">Function</span><div class="sidebar-menu-item"><span class="darkmode_switchbutton menu-child" onclick="sco.switchDarkMode()"><i class="solitude fa-solid fa-circle-half-stroke"></i><span>Display mode</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>Article</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="solitude  fas fa-folder-closed"></i><span>Archives</span></a></li><li><a class="site-page child" href="/tags/"><i class="solitude  fas fa-tags"></i><span>Tags</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><span>About</span></a></div></div><span class="sidebar-menu-item-title">Tags</span><div class="card-widget card-tags card-archives card-webinfo card-allinfo"><div class="card-tag-cloud"><a href="/tags/Caddy/">Caddy<sup>1</sup></a><a href="/tags/SSL/">SSL<sup>3</sup></a><a href="/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/">反向代理<sup>2</sup></a><a href="/tags/%E5%93%94%E5%93%A9%E5%93%94%E5%93%A9/">哔哩哔哩<sup>1</sup></a><a href="/tags/Github/">Github<sup>1</sup></a><a href="/tags/Docker/">Docker<sup>5</sup></a><a href="/tags/NginxProxyManager/">NginxProxyManager<sup>1</sup></a><a href="/tags/Minecraft/">Minecraft<sup>2</sup></a><a href="/tags/Java/">Java<sup>2</sup></a><a href="/tags/Fabric/">Fabric<sup>1</sup></a><a href="/tags/ArchLinux/">ArchLinux<sup>1</sup></a><a href="/tags/FontConfig/">FontConfig<sup>1</sup></a><a href="/tags/%E5%AD%97%E4%BD%93/">字体<sup>1</sup></a><a href="/tags/Mac-mini/">Mac mini<sup>2</sup></a><a href="/tags/SSH/">SSH<sup>2</sup></a><a href="/tags/Homebrew/">Homebrew<sup>1</sup></a><a href="/tags/Windows/">Windows<sup>1</sup></a><a href="/tags/RSync/">RSync<sup>1</sup></a><a href="/tags/Hexo/">Hexo<sup>1</sup></a><a href="/tags/Cygwin/">Cygwin<sup>1</sup></a><a href="/tags/macOS/">macOS<sup>1</sup></a><a href="/tags/SmartDNS/">SmartDNS<sup>1</sup></a><a href="/tags/DNS/">DNS<sup>1</sup></a><a href="/tags/Linux/">Linux<sup>1</sup></a><a href="/tags/SwayWM/">SwayWM<sup>1</sup></a><a href="/tags/i3wm/">i3wm<sup>1</sup></a><a href="/tags/Arch/">Arch<sup>1</sup></a><a href="/tags/autologin/">autologin<sup>1</sup></a><a href="/tags/agetty/">agetty<sup>1</sup></a><a href="/tags/systemd/">systemd<sup>1</sup></a><a href="/tags/Debian/">Debian<sup>1</sup></a></div></div></div></div><!-- keyboard--><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav class="show" id="nav"><div id="nav-group"><div id="blog_name"><a id="site-name" href="/" title="Back to home"><span class="title">1eof's Blog</span><i class="solitude fa-solid fa-home"></i></a></div><div id="page-name-mask"><div id="page-name"><a id="page-name-text" onclick="sco.toTop()">macOS如何安装并配置SmartDNS</a></div></div><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>Article</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="solitude  fas fa-folder-closed"></i><span>Archives</span></a></li><li><a class="site-page child" href="/tags/"><i class="solitude  fas fa-tags"></i><span>Tags</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/about/"><span>About</span></a></div></div></div><div id="nav-left"></div><div id="nav-right"><div class="nav-button" id="nav-totop" onclick="sco.toTop()"><a class="totopbtn"><i class="solitude fa-solid fa-arrow-up"></i><span id="percent">0</span></a></div><div id="toggle-menu"><a class="site-page"><i class="solitude fa-solid fa-bars"></i></a></div></div></div></nav><div class="coverdiv" id="coverdiv"><img class="nolazyload" id="post-cover" src="/img/default.avif" alt="macOS如何安装并配置SmartDNS"></div><div id="post-info"><div id="post-firstinfo"><div class="meta-firstline"><a class="post-meta-original" title="This article is a Original article, pay attention to the copyright.">Original</a><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Mac-mini/"><span class="tags-name tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>Mac mini</span></a><a class="post-meta__tags" href="/tags/macOS/"><span class="tags-name tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>macOS</span></a><a class="post-meta__tags" href="/tags/SmartDNS/"><span class="tags-name tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>SmartDNS</span></a><a class="post-meta__tags" href="/tags/DNS/"><span class="tags-name tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>DNS</span></a></div></div></div></div><h1 class="post-title">macOS如何安装并配置SmartDNS</h1><div id="post-meta"><div class="meta-secondline"></div></div></div><section class="main-hero-waves-area waves-area"><svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto"><defs><path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path></defs><g class="parallax"><use href="#gentle-wave" x="48" y="0"></use><use href="#gentle-wave" x="48" y="3"></use><use href="#gentle-wave" x="48" y="5"></use><use href="#gentle-wave" x="48" y="7"></use></g></svg></section></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>本文将介绍如何在macOS系统上安装SmartDNS并设置DNS分流，以及广告拦截。</p>
+<h1>准备工作</h1>
+<ol>
+<li>安装好homebrew</li>
+<li>确保53端口没有被占用</li>
+</ol>
+<h1>安装</h1>
+<p>SmartDNS的安装十分简单，直接用homebrew就可以搞定。<br>
+<strong>PS:本次安装的是Rust移植版的SmartDNS,原版只有Linux版本，因此原版的部分配置是不适用的。</strong></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">brew <span class="token function">install</span> smartdns<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>随后启动SmartDNS服务。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> smartdns <span class="token function">service</span> start<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>homebrew安装的SmartDNS的默认配置文件存放在<code>/opt/homebrew/etc/smartdns</code>目录下的<code>smartdns.conf</code>文件。<br>
+稍后我会贴出我的配置。<br>
+我建议在更改完配置文件后，使用以下命令测试配置是否有效。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">smartdns <span class="token builtin class-name">test</span> <span class="token parameter variable">-c</span> /opt/homebrew/etc/smartdns/smartdns.conf<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h1>DNS分流</h1>
+<p>首先克隆’dnsmasq-china-list’项目，这个项目包含了大多数国内的域名。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">git</span> clone <span class="token parameter variable">--depth</span> <span class="token number">1</span> https://github.com/felixonmars/dnsmasq-china-list.git<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后需要更改’Makefile’,将最上面的两行更改为:</p>
+<pre class="line-numbers language-Makefile" data-language="Makefile"><code class="language-Makefile">SERVER&#x3D;domestic
+SMARTDNS_SPEEDTEST_MODE&#x3D;tcp:80<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>这样配置的意思是将所有包含在’dnsmasq-china-list’中的域名使用’domestic’规则组进行解析，并且设置测速模式为仅测速80端口。<br>
+保存配置后使用以下命令生成’SmartDNS’的配置:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> smartdns-domain-rules<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后将在SmartDNS配置中包含这些配置文件就可以了。</p>
+<h1>广告拦截</h1>
+<p>在SmartDNS中实现广告拦截十分简单，下载广告拦截的配置文件随后在’smartdns.conf’中包含即可。<br>
+我个人的是’anti-ad’这个广告过滤列表。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> https://anti-ad.net/anti-ad-for-smartdns.conf <span class="token parameter variable">-O</span> /opt/homebrew/etc/smartdns/anti-ad.conf<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h1>完整配置</h1>
+<pre class="line-numbers language-properties" data-language="properties"><code class="language-properties"><span class="token comment"># Logs</span>
+<span class="token key attr-name">log-level</span> <span class="token value attr-value">info</span>
+<span class="token comment"># Include files</span>
+<span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/accelerated-domains.conf</span>
+<span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/apple.conf</span>
+<span class="token key attr-name">conf-file</span> <span class="token value attr-value">domestic/google.conf</span>
+<span class="token key attr-name">conf-file</span> <span class="token value attr-value">anti-ad.conf</span>
+<span class="token comment"># Listen ipv4</span>
+<span class="token key attr-name">bind</span> <span class="token punctuation">:</span><span class="token value attr-value">53</span>
+<span class="token comment"># Cache</span>
+<span class="token key attr-name">cache-persist</span> <span class="token value attr-value">yes</span>
+<span class="token key attr-name">serve-expired</span> <span class="token value attr-value">yes</span>
+<span class="token key attr-name">serve-expired-ttl</span> <span class="token value attr-value">86400</span>
+<span class="token key attr-name">prefetch-domain</span> <span class="token value attr-value">yes</span>
+<span class="token comment"># Speedtest</span>
+<span class="token key attr-name">speed-check-mode</span> <span class="token value attr-value">none</span>
+<span class="token key attr-name">response-mode</span> <span class="token value attr-value">fastest-response</span>
+<span class="token comment"># Disable TYPE65 and ipv6 resolve</span>
+<span class="token key attr-name">force-qtype-SOA</span> <span class="token value attr-value">28,65</span>
+<span class="token comment"># Disable dualstack IP selection</span>
+<span class="token key attr-name">dualstack-ip-selection</span> <span class="token value attr-value">no</span>
+<span class="token comment"># Upstream DNS</span>
+<span class="token comment">## Default group</span>
+<span class="token key attr-name">server-tls</span> <span class="token value attr-value">1.1.1.1 -b</span>
+<span class="token key attr-name">server-tls</span> <span class="token value attr-value">1.0.0.1 -b</span>
+<span class="token key attr-name">server-https</span> <span class="token value attr-value">https://cloudflare-dns.com/dns-query</span>
+<span class="token key attr-name">server-https</span> <span class="token value attr-value">https://dns.sb/dns-query</span>
+<span class="token key attr-name">server-https</span> <span class="token value attr-value">https://doh.opendns.com/dns-query</span>
+<span class="token comment">## Domestic group</span>
+<span class="token key attr-name">server-tls</span> <span class="token value attr-value">223.5.5.5 -g domestic -e -b</span>
+<span class="token key attr-name">server-tls</span> <span class="token value attr-value">223.6.6.6 -g domestic -e -b</span>
+<span class="token key attr-name">server-https</span> <span class="token value attr-value">https://dns.alidns.com/dns-query -g domestic -e</span>
+<span class="token key attr-name">server-https</span> <span class="token value attr-value">https://doh.pub/dns-query -g domestic -e</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></article><div class="post-copyright"><div class="post-copyright__author_group"><a class="post-copyright__author_img" href="/about/"><img class="post-copyright__author_img_front" src="https://s2.loli.net/2024/06/15/RUsmewShJG47o2r.webp"></a><div class="post-copyright__author_name">1eof's Blog</div><div class="post-copyright__author_desc"></div></div><div class="post-tools" id="post-tools"><div class="post-tools-left"><div id="quit-box" onclick="RemoveRewardMask()"></div></div></div><div class="post-copyright__notice"><span class="post-copyright-info">This piece of writing is an original article, utilizing the<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">CC BY-NC-SA 4.0</a>Agreement. For complete reproduction, please acknowledge the source as Courtesy of<a href="/">1eof's Blog</a></span></div></div><div class="post-tools-right"><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Mac-mini/"><span class="tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>Mac mini<span class="tagsPageCount">2</span></span></a><a class="post-meta__tags" href="/tags/macOS/"><span class="tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>macOS<span class="tagsPageCount">1</span></span></a><a class="post-meta__tags" href="/tags/SmartDNS/"><span class="tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>SmartDNS<span class="tagsPageCount">1</span></span></a><a class="post-meta__tags" href="/tags/DNS/"><span class="tags-punctuation"><i class="solitude fa-solid fa-hashtag"></i>DNS<span class="tagsPageCount">1</span></span></a></div></div></div><nav class="needEndHide pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/hello-world/"><div class="pagination-info"><div class="label">Next</div><div class="next_info">Hello World</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-content"><div class="card-info-avatar is-center"><div class="author-info__top-group"><div class="author-info__sayhi" id="author-info__sayhi" onclick="sco.changeSayHelloText()">sayhello.morning</div></div></div><div class="avatar-img-group"><img class="avatar-img" alt="Avatar" src="https://s2.loli.net/2024/06/15/RUsmewShJG47o2r.webp"></div><div class="author-info__description_group"><div class="author-info__description">Here is my personal blog</div><div class="author-info__description2">I believe you can find knowledge and tutorials here that will be useful to you.</div></div><div class="author-info__bottom-group"><a class="author-info__bottom-group-left" href="/about/"><div class="author-info__name">Leo</div><div class="author-info__desc"></div></a><div class="card-info-social-icons is-center"><a class="social-icon" target="_blank" rel="noopener" href="https://github.com/1eof" title="Github"><i class="solitude  fab fa-github"></i></a><a class="social-icon" target="_blank" rel="noopener" href="https://space.bilibili.com/531277104" title="Bilibili"><i class="solitude  fab fa-bilibili"></i></a></div></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="solitude fa-solid fa-bars"></i><span>Table of contents</span></div><div class="toc-content" id="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">准备工作</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">安装</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">DNS分流</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">广告拦截</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">完整配置</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="solitude fa-solid fa-map"></i><span>New posts</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/macos-smartdns/" title="macOS如何安装并配置SmartDNS"><img alt="macOS如何安装并配置SmartDNS" src="/img/default.avif"></a><div class="content"><span class="title" href="/posts/macos-smartdns/" title="macOS如何安装并配置SmartDNS">macOS如何安装并配置SmartDNS</span></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/hello-world/" title="Hello World"><img alt="Hello World" src="/img/default.avif"></a><div class="content"><span class="title" href="/posts/hello-world/" title="Hello World">Hello World</span></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/sway-autologin/" title="Sway在无显示管理器的情况下实现开机自动登录"><img alt="Sway在无显示管理器的情况下实现开机自动登录" src="/img/default.avif"></a><div class="content"><span class="title" href="/posts/sway-autologin/" title="Sway在无显示管理器的情况下实现开机自动登录">Sway在无显示管理器的情况下实现开机自动登录</span></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/linux-fontconfig/" title="分享我在Linux下的Fontconfig"><img alt="分享我在Linux下的Fontconfig" src="/img/default.avif"></a><div class="content"><span class="title" href="/posts/linux-fontconfig/" title="分享我在Linux下的Fontconfig">分享我在Linux下的Fontconfig</span></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/macmini-server/" title="Mac mini服务器初始化设置"><img alt="Mac mini服务器初始化设置" src="/img/default.avif"></a><div class="content"><span class="title" href="/posts/macmini-server/" title="Mac mini服务器初始化设置">Mac mini服务器初始化设置</span></div></div></div></div></div></div></main><footer id="footer"><div id="st-footer-bar"><div class="footer-logo"><span>1eof's Blog</span></div><div class="footer-bar-description">来自Leo的文章。</div><a class="footer-bar-link" href="/about/">Learn more</a></div><div id="footer_deal"></div><div id="st-footer"></div><div id="footer-bar"><div class="footer-bar-links"><div class="footer-bar-left"><div class="copyright">© 2023 - 2024 By&nbsp;<a class="footer-bar-link" href="/">Leo</a></div></div><div class="footer-bar-right"><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/everfu/hexo-theme-solitude" alt="Theme">Theme</a></div></div></div></footer></div><!-- right_menu--><!-- inject body--><div><script src="/js/utils.js?v=2.0.6"></script><script src="/js/main.js?v=2.0.6"></script><script src="/js/third_party/waterfall.min.js?v=2.0.6"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pjax/0.2.8/pjax.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/node-snackbar/0.1.16/snackbar.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js"></script><div class="js-pjax"></div></div><!-- pjax--><script>const pjax = new Pjax({
+    elements: 'a:not([target="_blank"])',
+    selectors: ['title','#body-wrap','#site-config','meta[name="description"]','.js-pjax','meta[property^="og:"]','#config-diff'],
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+})
+
+document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+})
+
+document.addEventListener('pjax:complete', () => {
+    window.refreshFn()
+
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+        const newScript = document.createElement('script')
+        const content = item.text || item.textContent || item.innerHTML || ""
+        Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+        newScript.appendChild(document.createTextNode(content))
+        item.parentNode.replaceChild(newScript, item)
+    })
+
+    GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+})
+
+document.addEventListener('pjax:error', (e) => {
+    if (e.request.status === 404) {
+        pjax.loadUrl('/404.html')
+    }
+})</script><!-- theme--><script>initTheme = () => {
+    let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const cachedMode = utils.saveToLocal.get('theme');
+    if (cachedMode === undefined) {
+        const nowMode =
+            isDarkMode ? 'dark' : 'light'
+        document.documentElement.setAttribute('data-theme', nowMode);
+    } else {
+        document.documentElement.setAttribute('data-theme', cachedMode);
+    }
+    typeof rm === 'object' && rm.mode(cachedMode === 'dark' && isDarkMode)
+}
+initTheme()</script><!-- google adsense--><!-- search--><!-- Tianli-Talk--><!-- music--></body></html><script>const posts=["posts/macos-smartdns/","posts/hello-world/","posts/sway-autologin/","posts/linux-fontconfig/","posts/macmini-server/","posts/config-caddy/","posts/bili-tools/","posts/config-nginxproxymanager/","posts/docker-mcserver/","posts/fabric-mcserver/","posts/rsync-deploy-hexo/","posts/vps-cmd/"];function toRandomPost(){ pjax.loadUrl(GLOBAL_CONFIG.root+posts[Math.floor(Math.random()*posts.length)]); }</script>
